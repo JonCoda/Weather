@@ -1,0 +1,45 @@
+import requests
+import re  # Import regex module to remove HTML tags
+
+def get_directions(api_key, origin, destination):
+    # Define the endpoint and parameters
+    endpoint = "https://maps.googleapis.com/maps/api/directions/json"
+    params = {
+        "origin": origin,
+        "destination": destination,
+        "mode": "driving",
+        "key": api_key
+    }
+    
+    # Make the request
+    response = requests.get(endpoint, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if data['status'] == "OK":
+            steps = data['routes'][0]['legs'][0]['steps']
+            directions = []
+            for step in steps:
+                # Remove HTML tags from the instructions
+                clean_instruction = re.sub(r'<[^>]+>', '', step['html_instructions'])
+                directions.append(clean_instruction)
+            return directions
+        else:
+            return f"Error: {data['status']}"
+    else:
+        return f"HTTP Error: {response.status_code}"
+
+if __name__ == "__main__":
+    # Replace with your Google Maps API key
+    API_KEY = "AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig"
+    
+    # Define origin and destination
+    origin = "Holliston, MA"
+    destination = "Somerville, MA"
+    
+    # Get and print directions
+    directions = get_directions(API_KEY, origin, destination)
+    if isinstance(directions, list):
+        for idx, direction in enumerate(directions, start=1):
+            print(f"{idx}. {direction}")
+    else:
+        print(" ".join(directions))
