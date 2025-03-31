@@ -1,6 +1,25 @@
 import requests
 import re  # Import regex module to remove HTML tags
 
+def get_traffic_info(api_key, path):
+    # Define the endpoint and parameters for traffic information
+    endpoint = "https://roads.googleapis.com/v1/snapToRoads"
+    params = {
+        "path": path,
+        "interpolate": "true",
+        "key": api_key
+    }
+    
+    # Make the request
+    response = requests.get(endpoint, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if "snappedPoints" in data:
+            return data["snappedPoints"]
+        else:
+            return "No traffic data available."
+    else:
+        return f"HTTP Error: {response.status_code}"
 def get_directions(api_key, origin, destination):
     # Define the endpoint and parameters
     endpoint = "https://maps.googleapis.com/maps/api/directions/json"
@@ -28,13 +47,17 @@ def get_directions(api_key, origin, destination):
     else:
         return f"HTTP Error: {response.status_code}"
 
+import os
+
 if __name__ == "__main__":
-    # Replace with your Google Maps API key
-    API_KEY = "AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig"
+    # Load the Google Maps API key from an environment variable
+    API_KEY = 'AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig'
+    if not API_KEY:
+        raise ValueError("API key not found. Please set the 'GOOGLE_MAPS_API_KEY' environment variable.")
     
     # Define origin and destination
-    origin = "Holliston, MA"
-    destination = "Somerville, MA"
+    origin = "61 innerbelt road, somerville, MA"
+    destination = "40 holy lane, holliston, MA"
     
     # Get and print directions
     directions = get_directions(API_KEY, origin, destination)
@@ -43,3 +66,14 @@ if __name__ == "__main__":
             print(f"{idx}. {direction}")
     else:
         print(" ".join(directions))
+# Define a path for traffic information (latitude,longitude pairs)
+path = "42.2814,-71.4205|42.3736,-71.1097"  # Example path from origin to destination
+
+# Get and print traffic information
+traffic_info = get_traffic_info(API_KEY, path)
+if isinstance(traffic_info, list):
+    print("\nTraffic Information:")
+    for point in traffic_info:
+        print(f"Location: {point['location']}, Original Index: {point.get('originalIndex', 'N/A')}")
+else:
+    print(traffic_info)
