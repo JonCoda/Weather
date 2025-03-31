@@ -1,0 +1,30 @@
+import requests
+
+# Replace with your News API key
+API_KEY = '9f37170722f04a1abb96957252b093d1'
+
+def fetch_news(query='technology'):
+    url = f'https://newsapi.org/v2/everything?q={query}&apiKey={API_KEY}'
+    response = requests.get(url)
+    if response.status_code == 200:
+        articles = response.json().get('articles', [])
+        return articles
+    else:
+        print(f"Error: Unable to fetch news (Status Code: {response.status_code})")
+        return []
+
+def display_news(articles):
+    if not articles:
+        print("No articles found.")
+        return
+    for i, article in enumerate(articles, start=1):
+        print(f"{i}. {article.get('title')}")
+        print(f"   Source: {article.get('source', {}).get('name')}")
+        print(f"   URL: {article.get('url')}")
+        print()
+
+if __name__ == '__main__':
+    query = 'politics'  # You can change this to any topic you want
+    articles = fetch_news(query)
+    articles = articles[:10]  # Limit to 10 articles
+    display_news(articles)
