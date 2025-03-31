@@ -1,0 +1,21 @@
+import requests
+
+def get_weather_forecast():
+    # NWS API endpoint for Puerto Rico
+    url = "https://api.weather.gov/gridpoints/SJU/103,95/forecast"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for bad status codes
+        forecast_data = response.json()
+        
+        # Extracting relevant forecast information
+        periods = forecast_data.get("properties", {}).get("periods", [])
+        print("Weather Forecast for Puerto Rico:")
+        for period in periods:
+            print(f"{period['name']}: {period['detailedForecast']}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching weather data: {e}")
+
+if __name__ == "__main__":
+    get_weather_forecast()
