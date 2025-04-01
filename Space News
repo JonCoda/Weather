@@ -1,8 +1,8 @@
 import requests
 from datetime import datetime
 
-def fetch_stock_market_news(api_key, query="stock market", language="en", page_size=10):
-    url = "https://newsapi.org/v2/everything"
+def fetch_space_news(api_key, query="space", language="en", page_size=10):
+    url = "https://newsapi.org/v2/everything"  
     params = {
         "q": query,
         "language": language,
@@ -25,7 +25,7 @@ def display_news(articles):
         print("No articles found.")
         return
     
-    print("\n--- Financial News ---\n")
+    print("\n--- Space News ---\n")
     for idx, article in enumerate(articles, start=1):
         print(f"{idx}. Title: {article['title']}")
         print(f"   Source: {article['source']['name']}")
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     try:
         # Replace 'your_api_key_here' with your actual NewsAPI key
         api_key = "9f37170722f04a1abb96957252b093d1"
-        news_articles = fetch_stock_market_news(api_key)
+        news_articles = fetch_space_news(api_key, query="space")
         display_news(news_articles)
     except Exception as e:
         print(f"An error occurred: {e}")
