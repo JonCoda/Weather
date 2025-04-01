@@ -1,22 +1,60 @@
 import requests
+from datetime import datetime
 
-def fetch_sports_news(api_key, country='us'):
-    url = f"https://newsapi.org/v2/top-headlines?category=sports&country={country}&apiKey={api_key}"
-    response = requests.get(url)
-    return response.json().get('articles', []) if response.status_code == 200 else []
+def fetch_sports_news(api_key, query="sports", language="en", page_size=10):
+    """
+    Fetches sports news from the NewsAPI based on a query.
+    """
+    url = "https://newsapi.org/v2/everything"  
+    params = {
+        "q": query,
+        "language": language,
+        "pageSize": page_size,
+        "apiKey": api_key
+    }
+    
+    response = requests.get(url, params=params)
+    
+    if response.status_code == 200:
+        data = response.json()
+        articles = data.get("articles", [])
+        return articles
+    else:
+        print(f"Error: Unable to fetch news (Status Code: {response.status_code})")
+        return []
 
 def display_news(articles):
-    print("=== Sports News Dashboard ===")
+    """
+    Displays the sports news articles in a formatted way.
+    """
+    if not articles:
+        print("No articles found.")
+        return
+    
+    print("\n--- Sports News ---\n")
     for idx, article in enumerate(articles, start=1):
-        url = article.get('url')
-        title = article.get('title')
-        print(f"\n{idx}. \033]8;;{url}\033\\{title}\033]8;;\033\\")  # Embedded link into title
-        print(f"   Source: {article.get('source', {}).get('name')}")
-        print(f"   Published At: {article.get('publishedAt')}")
-        print(f"   Description: {article.get('description')}")
+        print(f"{idx}. Title: {article['title']}")
+        print(f"   Source: {article['source']['name']}")
+        
+        # Format the published date and time
+        published_at_str = article['publishedAt']
+        try:
+            published_at_datetime = datetime.fromisoformat(published_at_str.replace("Z", "+00:00"))
+            formatted_published_at = published_at_datetime.strftime("%Y-%m-%d %H:%M:%S %Z")
+            print(f"   Published At: {formatted_published_at}")
+        except ValueError:
+            print(f"   Published At: {published_at_str} (Date format error)")
+        
+        print(f"   URL: {article['url']}")
+        
+        if 'description' in article and article['description']:
+            print(f"   Description: {article['description']}")
+        else:
+            print("   Description: No description available.")
+        print("-" * 30)
+    print("\n--- End of News ---\n")
 
 if __name__ == "__main__":
-    API_KEY = "9f37170722f04a1abb96957252b093d1"  # Replace with your NewsAPI key
-    country = "us"  # Change to your preferred country code if needed
-    sports_news = fetch_sports_news(API_KEY, country)
-    display_news(sports_news) if sports_news else print("No sports news available.")
+    api_key = "9f37170722f04a1abb96957252b093d1"
+    sports_news = fetch_sports_news(api_key, query="sports")
+    display_news(sports_news)
