@@ -23,7 +23,8 @@ def get_boston_forecast(latitude, longitude):
         # Print the forecast.
         print("Boston Weather Forecast:")
         for period in forecast_data["properties"]["periods"]:
-            print(f"  {period['name']}: {period['shortForecast']}")
+            print(f"  {period['name']}: {period['shortForecast']}, "
+                  f"Temperature: {period.get('temperature', 'N/A')}°{period.get('temperatureUnit', '')}")
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching forecast data: {e}")
