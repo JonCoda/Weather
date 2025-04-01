@@ -1,7 +1,53 @@
+import json
 import requests
+import datetime
+    
+def get_boston_alerts(latitude, longitude):
+    """Fetches and displays weather alerts from the NWS API."""
+
+    try:
+        alerts_url = f"https://api.weather.gov/alerts/active?point={longitude},{latitude}"
+
+        headers = {'User-Agent': 'BostonWeatherDashboard/1.0 (your_email@example.com)'}
+
+        alerts_response = requests.get(alerts_url, headers=headers)
+        alerts_response.raise_for_status()
+        alerts_data = alerts_response.json()
+
+        if alerts_data["features"]:
+            print("\nWeather Alerts:")
+            for alert in alerts_data["features"]:
+                print(f"  {alert['properties']['headline']}: {alert['properties']['description']}")
+        else: 
+            print("\nNo active weather alerts.")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching alert data: {e}")
+    except json.JSONDecodeError as e:
+        print(f"Error: Could not parse the weather data. {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+def get_coordinates(location):
+        """
+        Gets latitude and longitude for a given location (city or zip code).
+        This is a simplified example and might not be very accurate.
+        For production, use a proper geocoding service.
+        """
+        # Example using a very basic lookup (replace with a real geocoding service)
+        location_data = { 
+        "Boston": (42.3601, -71.0589),
+        "New York": (40.7128, -74.0060),
+        "Los Angeles": (34.0522, -118.2437),
+        "02115": (42.3456, -71.0964) # Example zip code
+        }
+        if location in location_data:
+         return location_data[location]
+        else:
+         return None
 
 def get_boston_forecast(latitude, longitude):
-    """Fetches and displays the forecast from the NWS API."""
+    """Fetches and displays a detailed forecast from the NWS API."""
 
     base_url = "https://api.weather.gov/points/"
     points_url = f"{base_url}{latitude},{longitude}"
@@ -21,38 +67,34 @@ def get_boston_forecast(latitude, longitude):
         forecast_data = forecast_response.json()
 
         # Print the forecast.
-        print("Boston Weather Forecast:")
+        print("Weather Forecast:")
         for period in forecast_data["properties"]["periods"]:
-            print(f"  {period['name']}: {period['shortForecast']}, "
-                  f"Temperature: {period.get('temperature', 'N/A')}°{period.get('temperatureUnit', '')}")
+            print(f"  {period['name']}:")
+            print(f"    Short Forecast: {period['shortForecast']}")
+            print(f"    Temperature: {period.get('temperature', 'N/A')}°{period.get('temperatureUnit', '')}")
+            print(f"    Wind: {period.get('windSpeed', 'N/A')} {period.get('windDirection', '')}")
+            print(f"    Probability of Precipitation: {period.get('probabilityOfPrecipitation', {}).get('value', 'N/A')}%")
+            print(f"    Detailed Forecast: {period['detailedForecast']}")
+            print("-" * 20)  # Separator between periods
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching forecast data: {e}")
+    except json.JSONDecodeError as e:
+        print(f"Error: Could not parse the weather data. {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
-def get_boston_alerts(latitude, longitude):
-    """Fetches and displays weather alerts from the NWS API."""
+def main():
+    location = input("Enter a city or zip code: ")
+    coordinates = get_coordinates(location)
 
-    alerts_url = f"https://api.weather.gov/alerts/active?point={longitude},{latitude}"
+    if coordinates:
+        latitude, longitude = coordinates
+        print(f"Getting weather for {location} (Lat: {latitude}, Lon: {longitude})")
+        get_boston_forecast(latitude, longitude)
+        get_boston_alerts(latitude, longitude)
+    else:
+        print(f"Could not find coordinates for {location}.")
 
-    headers = {'User-Agent': 'BostonWeatherDashboard/1.0 (your_email@example.com)'}
-
-    try:
-        alerts_response = requests.get(alerts_url, headers=headers)
-        alerts_response.raise_for_status()
-        alerts_data = alerts_response.json()
-
-        if alerts_data["features"]:
-            print("\nWeather Alerts:")
-            for alert in alerts_data["features"]:
-                print(f"  {alert['properties']['headline']}: {alert['properties']['description']}")
-        else:
-            print("\nNo active weather alerts.")
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching alert data: {e}")
-
-# Boston coordinates
-latitude = 42.3601
-longitude = -71.0589
-
-get_boston_forecast(latitude, longitude)
+if __name__ == "__main__":
+    main()
