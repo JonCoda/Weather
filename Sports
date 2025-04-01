@@ -8,7 +8,9 @@ def fetch_sports_news(api_key, country='us'):
 def display_news(articles):
     print("=== Sports News Dashboard ===")
     for idx, article in enumerate(articles, start=1):
-        print(f"\n{idx}. {article.get('title')}")
+        url = article.get('url')
+        title = article.get('title')
+        print(f"\n{idx}. \033]8;;{url}\033\\{title}\033]8;;\033\\")  # Embedded link into title
         print(f"   Source: {article.get('source', {}).get('name')}")
         print(f"   Published At: {article.get('publishedAt')}")
         print(f"   Description: {article.get('description')}")
