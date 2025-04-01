@@ -1,0 +1,53 @@
+import requests
+# This script fetches news articles about Holliston and displays them in the console.
+# Replace with your News API key
+API_KEY = '9f37170722f04a1abb96957252b093d1'
+
+def fetch_holliston_news():
+    url = f'https://newsapi.org/v2/everything?q=Holliston&apiKey={API_KEY}'
+    response = requests.get(url)
+    news_data = response.json()
+
+    if news_data.get('status') == 'ok':
+        articles = news_data.get('articles', [])
+    else:
+        articles = []
+
+    return articles
+
+def generate_html(articles):
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Holliston News Dashboard</title>
+    </head>
+    <body>
+        <h1>Holliston News</h1>
+        <ul>
+    """
+    for article in articles:
+        html_content += f"""
+        <li>
+            <a href="{article.get('url')}" target="_blank">{article.get('title')}</a>
+            <p>{article.get('description')}</p>
+        </li>
+        """
+    html_content += """
+        </ul>
+    </body>
+    </html>
+    """
+    return html_content
+
+if __name__ == '__main__':
+    articles = fetch_holliston_news()
+    
+    # Print the titles as clickable hyperlinks and descriptions of the articles to the console
+    for article in articles:
+        title = article.get('title')
+        url = article.get('url')
+        description = article.get('description')
+        print(f"Title: \033]8;;{url}\033\\{title}\033]8;;\033\\")
+        print(f"Description: {description}")
+        print("-" * 80)

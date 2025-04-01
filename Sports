@@ -1,0 +1,20 @@
+import requests
+
+def fetch_sports_news(api_key, country='us'):
+    url = f"https://newsapi.org/v2/top-headlines?category=sports&country={country}&apiKey={api_key}"
+    response = requests.get(url)
+    return response.json().get('articles', []) if response.status_code == 200 else []
+
+def display_news(articles):
+    print("=== Sports News Dashboard ===")
+    for idx, article in enumerate(articles, start=1):
+        print(f"\n{idx}. {article.get('title')}")
+        print(f"   Source: {article.get('source', {}).get('name')}")
+        print(f"   Published At: {article.get('publishedAt')}")
+        print(f"   Description: {article.get('description')}")
+
+if __name__ == "__main__":
+    API_KEY = "9f37170722f04a1abb96957252b093d1"  # Replace with your NewsAPI key
+    country = "us"  # Change to your preferred country code if needed
+    sports_news = fetch_sports_news(API_KEY, country)
+    display_news(sports_news) if sports_news else print("No sports news available.")

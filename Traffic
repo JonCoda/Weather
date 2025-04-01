@@ -1,5 +1,5 @@
 import requests
-import re  # Import regex module to remove HTML tags
+import re  # Import the regex module to remove HTML tags
 
 def get_traffic_info(api_key, path):
     # Define the endpoint and parameters for traffic information
@@ -17,9 +17,9 @@ def get_traffic_info(api_key, path):
         if "snappedPoints" in data:
             return data["snappedPoints"]
         else:
-            return "No traffic data available."
+            return "No traffic data is available."
     else:
-        return f"HTTP Error: {response.status_code}"
+        return f"HTTP error: {response.status_code}"
 def get_directions(api_key, origin, destination):
     # Define the endpoint and parameters
     endpoint = "https://maps.googleapis.com/maps/api/directions/json"
@@ -45,7 +45,7 @@ def get_directions(api_key, origin, destination):
         else:
             return f"Error: {data['status']}"
     else:
-        return f"HTTP Error: {response.status_code}"
+        return f"HTTP error: {response.status_code}"
 
 import os
 
@@ -56,8 +56,8 @@ if __name__ == "__main__":
         raise ValueError("API key not found. Please set the 'GOOGLE_MAPS_API_KEY' environment variable.")
     
     # Define origin and destination
-    origin = "61 innerbelt road, somerville, MA"
-    destination = "40 holy lane, holliston, MA"
+    origin = "61 Innerbelt Road, Somerville, MA"
+    destination = "40 Holy Lane, Holliston, MA"
     
     # Get and print directions
     directions = get_directions(API_KEY, origin, destination)
@@ -65,15 +65,5 @@ if __name__ == "__main__":
         for idx, direction in enumerate(directions, start=1):
             print(f"{idx}. {direction}")
     else:
-        print(" ".join(directions))
-# Define a path for traffic information (latitude,longitude pairs)
-path = "42.2814,-71.4205|42.3736,-71.1097"  # Example path from origin to destination
-
-# Get and print traffic information
-traffic_info = get_traffic_info(API_KEY, path)
-if isinstance(traffic_info, list):
-    print("\nTraffic Information:")
-    for point in traffic_info:
-        print(f"Location: {point['location']}, Original Index: {point.get('originalIndex', 'N/A')}")
-else:
-    print(traffic_info)
+        print(directions if isinstance(directions, str) else " ".join(directions))
+        
