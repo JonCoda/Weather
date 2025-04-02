@@ -1,0 +1,51 @@
+import requests
+import json
+
+def get_political_news(api_key, country='us', category='politics'):
+    """
+    Fetches political news from NewsAPI.org.
+
+    Args:
+        api_key (str): Your NewsAPI.org API key.
+        country (str): The 2-letter ISO 3166-1 code of the country you want to get headlines for. Defaults to 'us'.
+        category (str): The category you want to get headlines for. Defaults to 'politics'.
+
+    Returns:
+        list: A list of news articles, or None if an error occurs.
+    """
+    url = f"https://newsapi.org/v2/top-headlines?country={country}&category={category}&apiKey={api_key}"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for bad status codes
+        data = response.json()
+        if data['status'] == 'ok':
+            return data['articles']
+        else:
+            print(f"Error from NewsAPI: {data['message']}")
+            return None
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return None
+
+def display_news(articles):
+    """
+    Displays the news articles in a user-friendly format.
+
+    Args:
+        articles (list): A list of news articles.
+    """
+    if articles:
+        for i, article in enumerate(articles):
+            print(f"{i+1}. {article['title']}")
+            print(f"   Source: {article['source']['name']}")
+            print(f"   Published date: {article['publishedAt']}")
+            print(f"   URL: {article['url']}")
+            print(f"   Description: {article['description']}")
+            print("-" * 20)
+    else:
+        print("No articles found.")
+
+if __name__ == "__main__":
+    API_KEY = "9f37170722f04a1abb96957252b093d1"  # Replace with your actual API key
+    political_news = get_political_news(API_KEY)
+    display_news(political_news)

@@ -1,6 +1,7 @@
 import json
 import requests
 import datetime
+import re
     
 def get_boston_alerts(latitude, longitude):
     """Fetches and displays weather alerts from the NWS API."""
@@ -35,14 +36,21 @@ def get_coordinates(location):
         For production, use a proper geocoding service.
         """
         # Example using a very basic lookup (replace with a real geocoding service)
-        location_data = { 
-        "Boston": (42.3601, -71.0589),
-        "New York": (40.7128, -74.0060),
-        "Los Angeles": (34.0522, -118.2437),
-        "02115": (42.3456, -71.0964) # Example zip code
+        location_data = {
+            "Boston": (42.3601, -71.0589),
+            "New York": (40.7128, -74.0060),
+            "Los Angeles": (34.0522, -118.2437),
+            "02115": (42.3456, -71.0964)  # Example zip code
         }
-        if location in location_data:
-         return location_data[location]
+
+        # Check if the input is a zip code using regex
+        zip_code_match = re.fullmatch(r"\d{5}", location)
+
+        if zip_code_match:
+            # For simplicity, we'll use a fixed location for any zip code for now
+            return (42.3456, -71.0964)  # Example location for zip codes
+        elif location in location_data:
+            return location_data[location]
         else:
          return None
 
