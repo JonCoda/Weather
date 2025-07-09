@@ -102,8 +102,8 @@ st.title("🚦 Traffic & Driving Directions")
 st.markdown("Get real-time traffic conditions and step-by-step directions.")
 
 st.sidebar.header("Inputs")
-origin_input = st.sidebar.text_input("Origin (e.g., '40 Holly Lane, Holliston, MA')", "40 Holly Lane, Holliston, MA")
-destination_input = st.sidebar.text_input("Destination (e.g., '61 Innerbelt Rd, Somerville, MA')", "61 Innerbelt Rd, Somerville, MA")
+origin_input = st.sidebar.text_input("Origin (e.g., 'Worcester, MA')", "Worcester, MA")
+destination_input = st.sidebar.text_input("Destination (e.g. 'Boston, MA')", "Boston, MA")
 
 if st.sidebar.button("Get Info"):
     if not origin_input or not destination_input:
@@ -135,12 +135,3 @@ if st.sidebar.button("Get Info"):
 
 st.markdown("---")
 st.write("Powered by Google Maps Directions API")
-
-# Instructions on how to run
-st.sidebar.markdown("---")
-st.sidebar.markdown("""
-**How to run this app:**
-1.  Save the code as a Python file (e.g., `app.py`).
-2.  Install Streamlit: `pip install streamlit requests`
-3.  Run from your terminal: `streamlit run app.py`
-""")
