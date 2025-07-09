@@ -2,7 +2,7 @@ import requests
 import os
 
 
-def get_traffic(origin, destination):
+def get_traffic(origin, destination): Holliston, Boston
     """
     Fetches traffic information between an origin and destination using the Google Maps Directions API.
     """
