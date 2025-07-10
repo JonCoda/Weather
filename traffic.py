@@ -281,19 +281,6 @@ if get_weather_button and selected_weather_city:
                     st.dataframe(hourly_df[['Temperature (°F)', 'Wind Speed (mph)', 'Short Forecast']])
 
                 st.markdown("---")
-                st.markdown("#### Location Map")
-                # Use the pre-defined lat/lon for the map
-                m = folium.Map(location=[lat, lon], zoom_start=10)
-                folium.Marker([lat, lon], popup=city_name_display).add_to(m)
-                st_folium(m, width=700, height=500, key="weather_map")
-
-            else:
-                st.warning("Could not retrieve detailed forecast data for the specified location.")
-        else:
-            st.warning("Could not find weather grid information for the selected location. This may occur if the pre-defined coordinates are problematic or an API issue.")
-else:
-    st.info("Select a city from the sidebar and click 'Get Weather Forecast' to see the weather.")
-
 
 if get_traffic_button and traffic_origin and traffic_destination:
     st.header("🚦 Traffic & Driving Directions")
