@@ -19,7 +19,7 @@ except KeyError:
 
 # News API Key
 try:
-    NEWS_API_KEY = st.secrets["NEWS_API_KEY"]
+    NEWS_API_KEY = st.secrets["9f37170722f04a1abb96957252b093d1"]
 except KeyError:
     NEWS_API_KEY = '9f37170722f04a1abb96957252b093d1' # Your provided key for testing
     st.warning("NEWS_API_KEY not found in Streamlit secrets. Using hardcoded key (NOT RECOMMENDED for production).")
