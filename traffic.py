@@ -14,8 +14,7 @@ try:
 except KeyError:
     # Fallback to hardcoded key from your prompt for demonstration if not in secrets
     Maps_API_KEY = "AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig"
-    st.warning("Maps_API_KEY not found in Streamlit secrets. Using hardcoded key (NOT RECOMMENDED for production).")
-
+    
 # --- Pre-defined US Cities for Weather.gov (to avoid external geocoding) ---
 # Add more cities as needed
 US_CITIES_COORDS = {
@@ -165,9 +164,6 @@ st.set_page_config(
 )
 
 st.title("🗺️ Unified Geo-Information Dashboard")
-st.info("Remember to replace placeholder emails and API keys with your actual values for production use.")
-st.warning("Note for Weather: Weather data is limited to a pre-defined list of US cities, as weather.gov does not convert arbitrary city names to coordinates.")
-
 
 # --- Sidebar for Weather Dashboard Inputs ---
 st.sidebar.header("☀️ Weather Dashboard")
