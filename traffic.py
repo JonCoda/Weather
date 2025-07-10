@@ -2,8 +2,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-import folium
-from streamlit_folium import st_folium
 from datetime import datetime
 import re # Needed for cleaning HTML in directions
 
