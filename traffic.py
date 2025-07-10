@@ -15,15 +15,12 @@ try:
     Maps_API_KEY = st.secrets["Maps_API_KEY"]
 except KeyError:
     Maps_API_KEY = "AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig" # Your provided key for testing
-    st.warning("Maps_API_KEY not found in Streamlit secrets. Using hardcoded key (NOT RECOMMENDED for production).")
 
 # News API Key
 try:
     NEWS_API_KEY = st.secrets["9f37170722f04a1abb96957252b093d1"]
 except KeyError:
     NEWS_API_KEY = '9f37170722f04a1abb96957252b093d1' # Your provided key for testing
-    st.warning("NEWS_API_KEY not found in Streamlit secrets. Using hardcoded key (NOT RECOMMENDED for production).")
-
 
 # --- Pre-defined US Cities for Weather.gov (to avoid external geocoding) ---
 # Add more cities as needed
