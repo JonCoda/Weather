@@ -1,6 +1,8 @@
+# pages/2_Traffic_Directions.py
 import streamlit as st
 import requests
 import os
+import re # Import regex for cleaning HTML instructions
 
 # --- Google Maps API Key ---
 # IMPORTANT: For production apps, use Streamlit Secrets for security.
@@ -9,7 +11,14 @@ import os
 # Then access it via st.secrets["Maps_API_KEY"]
 # For this example, we'll use the key provided in your prompt,
 # but strongly recommend using st.secrets for deployed apps.
-Maps_API_KEY = "AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig"
+# Use st.secrets.get() for safer access if the key might be missing
+try:
+    Maps_API_KEY = st.secrets["Maps_API_KEY"]
+except KeyError:
+    # Fallback to hardcoded key from your prompt for demonstration if not in secrets
+    Maps_API_KEY = "AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig"
+    st.warning("Maps_API_KEY not found in Streamlit secrets. Using hardcoded key (not recommended for production).")
+
 
 def get_traffic(origin, destination):
     """
@@ -84,7 +93,6 @@ def get_driving_directions(origin, destination):
         steps = []
         for step in data['routes'][0]['legs'][0]['steps']:
             # The 'html_instructions' often contain HTML tags; we'll remove them for cleaner display
-            import re
             clean_instruction = re.sub(r'<.*?>', '', step['html_instructions'])
             steps.append(f"- {clean_instruction} ({step['distance']['text']})")
 
@@ -95,11 +103,10 @@ def get_driving_directions(origin, destination):
     except Exception as e:
         return {'error': f"An unexpected error occurred: {e}"}
 
-# --- Streamlit App Layout ---
-st.set_page_config(page_title="Traffic & Directions App", layout="centered")
-
+# --- Streamlit Page Content ---
 st.title("🚦 Traffic & Driving Directions")
 st.markdown("Get real-time traffic conditions and step-by-step directions.")
+st.warning("Note: The Google Maps API Key provided in the prompt is **not** recommended for production use. Please use Streamlit secrets (`.streamlit/secrets.toml`) for secure storage.")
 
 st.sidebar.header("Inputs")
 origin_input = st.sidebar.text_input("Origin (e.g., 'Worcester, MA')", "Worcester, MA")
