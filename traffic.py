@@ -134,7 +134,7 @@ def get_driving_directions(origin, destination):
 
 # --- News API Functions ---
 def fetch_news(query='general', num_articles=5): # Default to 'general' query and 5 articles for brevity
-    NEWS_API_KEY == '9f37170722f04a1abb96957252b093d1
+    NEWS_API_KEY == '9f37170722f04a1abb96957252b093d1' 
 
     # Use 'qInTitle' for more focused search, or 'q' for broader
     # Add language parameter for relevance
