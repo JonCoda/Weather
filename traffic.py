@@ -11,7 +11,7 @@ import re # Needed for cleaning HTML in directions
 # Maps_API_KEY = "YourActualAPIKeyHere"
 # Then access it via st.secrets["Maps_API_KEY"]
 try:
-    Maps_API_KEY = st.secrets["Maps_API_KEY"]
+    Maps_API_KEY = st.secrets["AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig"]
 except KeyError:
     # Fallback to hardcoded key from your prompt for demonstration if not in secrets
     Maps_API_KEY = "AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig"
