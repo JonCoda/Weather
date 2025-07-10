@@ -25,7 +25,7 @@ def get_coordinates(city_name):
     """
     url = f"https://nominatim.openstreetmap.org/search?q={city_name}&format=json&limit=1"
     # IMPORTANT: Replace "your_email@example.com" with your actual email for the User-Agent.
-    headers = {"User-Agent": "StreamlitWeatherDashboardApp/1.0 (your_email@example.com)"}
+    headers = {"User-Agent": "StreamlitWeatherDashboardApp/1.0 (jocronin65@gmail.com)"}
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status() # Raise an exception for HTTP errors
