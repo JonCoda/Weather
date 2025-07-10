@@ -167,8 +167,6 @@ st.set_page_config(
 )
 
 st.title("🗺️ Unified Geo-Information Dashboard")
-st.info("Remember to replace placeholder emails and API keys with your actual values for production use.")
-
 
 # --- Sidebar for Weather Dashboard Inputs ---
 st.sidebar.header("☀️ Weather Dashboard")
@@ -288,8 +286,6 @@ if get_weather_button and weather_city:
 
 elif get_traffic_button and traffic_origin and traffic_destination:
     st.header("🚦 Traffic & Driving Directions")
-    st.warning("Note: The Google Maps API Key provided in the prompt is **not** recommended for production use. Please use Streamlit secrets (`.streamlit/secrets.toml`) for secure storage.")
-
     st.subheader("Traffic Information")
     with st.spinner("Fetching traffic data..."):
         traffic_result = get_traffic(traffic_origin, traffic_destination)
