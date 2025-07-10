@@ -276,8 +276,6 @@ if get_weather_button and selected_weather_city:
                     st.markdown("#### Raw Hourly Forecast Data Table")
                     st.dataframe(hourly_df[['Temperature (°F)', 'Wind Speed (mph)', 'Short Forecast']])
 
-                st.markdown("---")
-
 if get_traffic_button and traffic_origin and traffic_destination:
     st.header("🚦 Traffic & Driving Directions")
     st.warning("Note: The Google Maps API Key provided in the prompt is **not** recommended for production use. Please use Streamlit secrets (`.streamlit/secrets.toml`) for secure storage.")
