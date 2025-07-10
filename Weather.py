@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-from streamlit_folium import st_folium
 from datetime import datetime
 
 # --- API Functions ---
