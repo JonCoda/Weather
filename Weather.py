@@ -187,12 +187,3 @@ if city:
                 st.warning("Could not retrieve detailed forecast data for the specified location.")
         else:
             st.warning("Could not find weather grid information for the specified location. This may occur for locations outside the US or very remote areas.")
-
-        # --- Map ---
-        st.header("City Location")
-        m = folium.Map(location=[lat, lon], zoom_start=10)
-        folium.Marker([lat, lon], popup=display_name).add_to(m)
-        st_folium(m, width=700, height=500)
-
-    else:
-        st.info("Enter a city name above to get weather information. Remember, weather.gov data is for the US only.")
