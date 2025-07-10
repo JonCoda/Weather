@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+from streamlit_folium import st_folium
 from datetime import datetime
 
 # --- API Functions ---
@@ -41,16 +42,16 @@ def get_grid_data(lat, lon):
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         point_data = response.json()
-        
+
         # Extract WFO, gridX, gridY, and forecast URLs
         properties = point_data.get('properties', {})
         wfo = properties.get('cwa')
         grid_x = properties.get('gridX')
         grid_y = properties.get('gridY')
-        
+
         # The API directly provides the hourly forecast URL
         hourly_forecast_url = properties.get('forecastHourly')
-        
+
         return wfo, grid_x, grid_y, hourly_forecast_url
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching grid data from weather.gov: {e}. This usually means the location is outside the US or an API issue.")
@@ -102,23 +103,18 @@ if city:
                 st.header("Current/Upcoming Weather")
                 if forecast_periods:
                     current_period = forecast_periods[0]
-                    
-                    st.metric(label="Temperature", value=f"{current_period.get('temperature')}°{current_period.get('temperatureUnit', 'C')}", delta=None)
+
+                    st.metric(label="Temperature", value=f"{current_period.get('temperature')}°{current_period.get('temperatureUnit', 'F')}", delta=None)
                     st.write(f"**Short Forecast:** {current_period.get('shortForecast')}")
                     st.write(f"**Detailed Forecast:** {current_period.get('detailedForecast')}")
-                    
-                    # NWS API often provides wind speed as a range (e.g., "5 to 10 mph")
-                    # We'll just display it as is if available
+
                     wind_speed = current_period.get('windSpeed')
                     wind_direction = current_period.get('windDirection')
                     if wind_speed:
                         st.metric(label="Wind Speed", value=f"{wind_speed}", delta=None)
                     if wind_direction:
                         st.metric(label="Wind Direction", value=f"{wind_direction}", delta=None)
-                    
-                    # Humidity is often not directly available for the very first period as a separate field
-                    # We'll omit it for simplicity if not in the first period, or you could parse detailedForecast
-                    # For a more robust solution, you'd need to query a nearby observation station.
+
                     st.warning("Note: Current humidity is not directly provided by weather.gov hourly forecast for the current moment. You might find it in the detailed forecast text or via a separate observation station API call (more complex).")
 
                 st.markdown("---")
@@ -129,41 +125,42 @@ if city:
                 # Parse hourly data into a DataFrame
                 hourly_data_list = []
                 for period in forecast_periods:
-                    # Convert start and end times to datetime objects for plotting
+                    # Convert start time to datetime object
                     start_time = pd.to_datetime(period['startTime'])
-                    end_time = pd.to_datetime(period['endTime'])
-                    
+
                     # Extract the numerical part of wind speed if it's a range
                     wind_speed_str = period.get('windSpeed', '0 mph')
-                    wind_speed_value = 0
-                    if 'to' in wind_speed_str:
-                        parts = wind_speed_str.split(' to ')
+                    wind_speed_value = 0.0 # Use float for calculations
+                    if ' to ' in wind_speed_str:
                         try:
-                            wind_speed_value = (float(parts[0].split(' ')[0]) + float(parts[1].split(' ')[0])) / 2
+                            parts = wind_speed_str.split(' to ')
+                            lower = float(parts[0].split(' ')[0])
+                            upper = float(parts[1].split(' ')[0])
+                            wind_speed_value = (lower + upper) / 2
                         except ValueError:
-                            wind_speed_value = float(parts[0].split(' ')[0]) # Take lower bound if conversion fails
+                            # Fallback if parsing fails, e.g., "G30KT" could be "30KT"
+                            try:
+                                wind_speed_value = float(wind_speed_str.split(' ')[0])
+                            except ValueError:
+                                pass # Keep as 0.0 if cannot parse
                     else:
                         try:
                             wind_speed_value = float(wind_speed_str.split(' ')[0])
                         except ValueError:
-                            pass # Keep as 0 if cannot parse
+                            pass # Keep as 0.0 if cannot parse
 
                     hourly_data_list.append({
                         'Time': start_time,
-                        'Temperature (°F)': period.get('temperature'), # NWS uses Fahrenheit by default
+                        'Temperature (°F)': period.get('temperature'),
                         'Wind Speed (mph)': wind_speed_value,
                         'Short Forecast': period.get('shortForecast')
-                        # Humidity is not reliably available directly in the hourly periods for easy plotting.
                     })
 
                 hourly_df = pd.DataFrame(hourly_data_list)
-                
-                # Filter for the next 7 days, if data is available
-                # weather.gov hourly forecast is typically for ~7 days
+
                 if not hourly_df.empty:
-                    current_dt = datetime.now()
-                    seven_days_from_now = current_dt + pd.Timedelta(days=7)
-                    hourly_df = hourly_df[hourly_df['Time'] <= seven_days_from_now].set_index('Time')
+                    # Set 'Time' as index for charting
+                    hourly_df = hourly_df.set_index('Time')
 
                     selected_params = st.multiselect(
                         "Select parameters to view in forecast charts:",
@@ -173,17 +170,17 @@ if city:
 
                     if selected_params:
                         for param in selected_params:
-                            st.subheader(f"{param} Forecast")
-                            # Ensure the column exists before plotting
                             if param in hourly_df.columns:
-                                st.line_chart(hourly_df[[param]])
+                                st.subheader(f"{param} Hourly Forecast")
+                                # Ensure the column is numeric for plotting
+                                st.line_chart(hourly_df[param].astype(float))
                             else:
                                 st.warning(f"Data for '{param}' not available in the forecast.")
                     else:
                         st.info("Please select at least one parameter to display the forecast charts.")
 
                     st.markdown("---")
-                    st.subheader("Raw Hourly Forecast Data")
+                    st.subheader("Raw Hourly Forecast Data Table")
                     st.dataframe(hourly_df[['Temperature (°F)', 'Wind Speed (mph)', 'Short Forecast']])
 
 
