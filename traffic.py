@@ -4,17 +4,27 @@ import pandas as pd
 from datetime import datetime
 import re # Needed for cleaning HTML in directions
 
-# --- Google Maps API Key ---
+# --- API Keys ---
 # IMPORTANT: For production apps, use Streamlit Secrets for security.
-# Go to .streamlit/secrets.toml and add your key like:
-# Maps_API_KEY = "YourActualAPIKeyHere"
-# Then access it via st.secrets["Maps_API_KEY"]
+# Create a .streamlit/secrets.toml file with:
+# Maps_API_KEY = "YourActualGoogleMapsAPIKeyHere"
+# NEWS_API_KEY = "YourActualNewsAPIKeyHere"
+
+# Google Maps API Key
 try:
     Maps_API_KEY = st.secrets["Maps_API_KEY"]
 except KeyError:
-    # Fallback to hardcoded key from your prompt for demonstration if not in secrets
-    Maps_API_KEY = "AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig"
-    
+    Maps_API_KEY = "AIzaSyADLZbllg9LIbNpsReyeAtwuEzKXJImpig" # Your provided key for testing
+    st.warning("Maps_API_KEY not found in Streamlit secrets. Using hardcoded key (NOT RECOMMENDED for production).")
+
+# News API Key
+try:
+    NEWS_API_KEY = st.secrets["NEWS_API_KEY"]
+except KeyError:
+    NEWS_API_KEY = '9f37170722f04a1abb96957252b093d1' # Your provided key for testing
+    st.warning("NEWS_API_KEY not found in Streamlit secrets. Using hardcoded key (NOT RECOMMENDED for production).")
+
+
 # --- Pre-defined US Cities for Weather.gov (to avoid external geocoding) ---
 # Add more cities as needed
 US_CITIES_COORDS = {
@@ -27,19 +37,13 @@ US_CITIES_COORDS = {
     "Seattle, WA": {"lat": 47.6062, "lon": -122.3321},
     "Denver, CO": {"lat": 39.7392, "lon": -104.9903},
     "Dallas, TX": {"lat": 32.7767, "lon": -96.7970},
-    "Holliston, MA": {"lat": 42.1965, "lon": -71.4284}, # Based on earlier request
+    "Holliston, MA": {"lat": 42.1965, "lon": -71.4284},
     "Somerville, MA": {"lat": 42.3876, "lon": -71.0995} # Current context location
 }
 
 
 # --- Weather.gov API Functions ---
-
-# get_coordinates function is no longer needed as we use pre-defined coords
-
 def get_grid_data(lat, lon):
-    """
-    Fetches gridpoint metadata (WFO, gridX, gridY) from weather.gov for given lat/lon.
-    """
     url = f"https://api.weather.gov/points/{lat},{lon}"
     # IMPORTANT: Replace "your_email@example.com" with your actual email for the User-Agent.
     headers = {"User-Agent": "StreamlitUnifiedDashboard/1.0 (your_email@example.com)"}
@@ -47,30 +51,25 @@ def get_grid_data(lat, lon):
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         point_data = response.json()
-
         properties = point_data.get('properties', {})
         wfo = properties.get('cwa')
         grid_x = properties.get('gridX')
         grid_y = properties.get('gridY')
         hourly_forecast_url = properties.get('forecastHourly')
-
-        # NWS API returns a specific 'relativeLocation' that includes city/state
         location_properties = properties.get('relativeLocation', {}).get('properties', {})
         city_name_display = f"{location_properties.get('city', 'Unknown City')}, {location_properties.get('state', 'Unknown State')}"
-
         return wfo, grid_x, grid_y, hourly_forecast_url, city_name_display
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching grid data from weather.gov: {e}. This usually means the location is outside the US or an API issue.")
         return None, None, None, None, None
 
 def get_hourly_forecast_data(hourly_forecast_url):
-    """
-    Fetches hourly forecast data from weather.gov using the provided hourly forecast URL.
-    """
+    url = f"https://api.weather.gov/points/{lat},{lon}" # This line needs to be updated to use hourly_forecast_url
+    url = hourly_forecast_url # Corrected to use the provided URL
     # IMPORTANT: Replace "your_email@example.com" with your actual email for the User-Agent.
     headers = {"User-Agent": "StreamlitUnifiedDashboard/1.0 (your_email@example.com)"}
     try:
-        response = requests.get(hourly_forecast_url, headers=headers)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -78,116 +77,141 @@ def get_hourly_forecast_data(hourly_forecast_url):
         return None
 
 # --- Google Maps Directions API Functions (for Traffic) ---
-
 def get_traffic(origin, destination):
-    """
-    Fetches traffic information between an origin and destination using the Google Maps Directions API.
-    """
     if not Maps_API_KEY:
         return {'error': 'Google Maps API Key not configured.'}
-
     url_no_traffic = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&key={Maps_API_KEY}"
     url_traffic = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&departure_time=now&key={Maps_API_KEY}"
-
     try:
         response_traffic = requests.get(url_traffic)
         response_traffic.raise_for_status()
         data_traffic = response_traffic.json()
-
         if data_traffic['status'] != 'OK':
             return {'error': f"API Error (Traffic): {data_traffic.get('error_message', data_traffic['status'])}"}
         if not data_traffic['routes']:
             return {'error': 'No routes found for the given origin and destination (with traffic).'}
-
         leg_traffic = data_traffic['routes'][0]['legs'][0]
         traffic_info = {
             'distance': leg_traffic.get('distance', {}).get('text', 'N/A'),
             'duration_in_traffic': leg_traffic.get('duration_in_traffic', {}).get('text', 'N/A')
         }
-
         response_no_traffic = requests.get(url_no_traffic)
         response_no_traffic.raise_for_status()
         data_no_traffic = response_no_traffic.json()
-
         if data_no_traffic['status'] != 'OK':
             return {'error': f"API Error (No Traffic): {data_no_traffic.get('error_message', data_no_traffic['status'])}"}
         if not data_no_traffic['routes']:
             return {'error': 'No routes found for the given origin and destination (no traffic).'}
-
         leg_no_traffic = data_no_traffic['routes'][0]['legs'][0]
         traffic_info['duration_no_traffic'] = leg_no_traffic.get('duration', {}).get('text', 'N/A')
-
         return traffic_info
-
     except requests.exceptions.RequestException as req_err:
         return {'error': f"Network or API request error: {req_err}"}
     except Exception as e:
         return {'error': f"An unexpected error occurred: {e}"}
 
 def get_driving_directions(origin, destination):
-    """
-    Fetches driving directions between an origin and destination using the Google Maps Directions API.
-    Returns a list of human-readable steps.
-    """
     if not Maps_API_KEY:
         return {'error': 'Google Maps API Key not configured.'}
-
     url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&key={Maps_API_KEY}"
-
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-
         if data['status'] != 'OK':
             return {'error': f"API Error: {data.get('error_message', data['status'])}"}
         if not data['routes']:
             return {'error': 'No routes found for the given origin and destination.'}
-
         steps = []
         for step in data['routes'][0]['legs'][0]['steps']:
             clean_instruction = re.sub(r'<.*?>', '', step['html_instructions'])
             steps.append(f"- {clean_instruction} ({step['distance']['text']})")
-
         return {'steps': steps}
-
     except requests.exceptions.RequestException as req_err:
         return {'error': f"Network or API request error: {req_err}"}
     except Exception as e:
         return {'error': f"An unexpected error occurred: {e}"}
 
+# --- News API Functions ---
+def fetch_news(query='general', num_articles=5): # Default to 'general' query and 5 articles for brevity
+    if not NEWS_API_KEY or NEWS_API_KEY == '9f37170722f04a1abb96957252b093d1':
+        st.error("News API Key is not configured or is using a placeholder key. News functionality may be limited or fail.")
+        return [] # Return empty list if key is missing or placeholder
+
+    # Use 'qInTitle' for more focused search, or 'q' for broader
+    # Add language parameter for relevance
+    url = f'https://newsapi.org/v2/everything?qInTitle={query}&language=en&pageSize={num_articles}&apiKey={NEWS_API_KEY}'
+    try:
+        response = requests.get(url)
+        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+        articles = response.json().get('articles', [])
+        return articles
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching news: {e}. Check your News API key and query.")
+        return []
+    except Exception as e:
+        st.error(f"An unexpected error occurred while fetching news: {e}")
+        return []
+
+def display_news(articles):
+    if not articles:
+        st.info("No articles found for the given query.")
+        return
+    for i, article in enumerate(articles, start=1):
+        st.markdown(f"**{i}. {article.get('title', 'No Title')}**")
+        st.write(f"   Source: {article.get('source', {}).get('name', 'N/A')}")
+        st.markdown(f"   [Read More]({article.get('url', '#')})")
+        if article.get('description'):
+            st.write(f"   {article.get('description')}")
+        st.markdown("---")
+
+
 # --- Streamlit App Layout ---
 st.set_page_config(
-    page_title="Unified Geo-Information Dashboard",
+    page_title="Unified Geo-Info & News Dashboard",
     page_icon="🗺️",
     layout="wide"
 )
 
-st.title("🗺️ Unified Geo-Information Dashboard")
+st.title("🗺️ Unified Geo-Information & News Dashboard")
 
-# --- Sidebar for Weather Dashboard Inputs ---
-st.sidebar.header("☀️ Weather Dashboard")
-# Use a selectbox for pre-defined cities
+# --- Sidebar for Inputs ---
+st.sidebar.header("Inputs")
+
+# Weather Dashboard Inputs
+st.sidebar.markdown("---")
+st.sidebar.subheader("☀️ Weather Forecast")
 selected_weather_city = st.sidebar.selectbox(
     "Select city for weather (US only):",
     options=list(US_CITIES_COORDS.keys()),
-    index=list(US_CITIES_COORDS.keys()).index("Somerville, MA") # Default to Somerville, MA
+    index=list(US_CITIES_COORDS.keys()).index("Somerville, MA")
 )
 get_weather_button = st.sidebar.button("Get Weather Forecast")
 
 
-# --- Sidebar for Traffic & Directions Inputs ---
-st.sidebar.markdown("---") # Separator
-st.sidebar.header("🚦 Traffic & Driving Directions")
+# Traffic & Directions Inputs
+st.sidebar.markdown("---")
+st.sidebar.subheader("🚦 Traffic & Directions")
 traffic_origin = st.sidebar.text_input("Origin (e.g., 'Worcester, MA'):", "Worcester, MA")
 traffic_destination = st.sidebar.text_input("Destination (e.g., 'Boston, MA'):", "Boston, MA")
 get_traffic_button = st.sidebar.button("Get Traffic & Directions")
 
 
+# News Dashboard Inputs
+st.sidebar.markdown("---")
+st.sidebar.subheader("📰 Latest News")
+news_query = st.sidebar.text_input("News Topic (e.g., 'technology', 'local weather'):", "Somerville, MA news") # Default query
+get_news_button = st.sidebar.button("Fetch News")
+
+
 # --- Main Content Area ---
 st.write("---") # Separator for main content
 
+# Use columns for a cleaner layout if both weather and traffic/news are displayed
+# Or, keep conditional display as before. Let's stick with conditional display for simplicity
+# given the potentially large output of each section.
 
+# Weather Information Display
 if get_weather_button and selected_weather_city:
     st.header("☀️ Weather Information")
     with st.spinner(f"Fetching weather data for {selected_weather_city}..."):
@@ -210,6 +234,7 @@ if get_weather_button and selected_weather_city:
                     current_period = forecast_periods[0]
                     st.metric(label="Temperature", value=f"{current_period.get('temperature')}°{current_period.get('temperatureUnit', 'F')}", delta=None)
                     st.write(f"**Short Forecast:** {current_period.get('shortForecast')}")
+                    st.write(f"**Detailed Forecast:** {current_period.get('detailedForecast')}")
                     wind_speed = current_period.get('windSpeed')
                     wind_direction = current_period.get('windDirection')
                     if wind_speed:
@@ -275,8 +300,21 @@ if get_weather_button and selected_weather_city:
                     st.markdown("#### Raw Hourly Forecast Data Table")
                     st.dataframe(hourly_df[['Temperature (°F)', 'Wind Speed (mph)', 'Short Forecast']])
 
-if get_traffic_button and traffic_origin and traffic_destination:
+                st.markdown("---")
+                st.markdown("#### Location Map")
+                m = folium.Map(location=[lat, lon], zoom_start=10)
+                folium.Marker([lat, lon], popup=city_name_display).add_to(m)
+                st_folium(m, width=700, height=500, key="weather_map")
+
+            else:
+                st.warning("Could not retrieve detailed forecast data for the specified location.")
+        else:
+            st.warning("Could not find weather grid information for the selected location. This may occur if the pre-defined coordinates are problematic or an API issue.")
+    st.info("Select a city from the sidebar and click 'Get Weather Forecast' to see the weather.")
+
+elif get_traffic_button and traffic_origin and traffic_destination:
     st.header("🚦 Traffic & Driving Directions")
+    st.warning("Note: The Google Maps API Key provided in the prompt is **not** recommended for production use. Please use Streamlit secrets (`.streamlit/secrets.toml`) for secure storage.")
 
     st.subheader("Traffic Information")
     with st.spinner("Fetching traffic data..."):
@@ -299,11 +337,20 @@ if get_traffic_button and traffic_origin and traffic_destination:
         elif 'steps' in directions_result and directions_result['steps']:
             for step in directions_result['steps']:
                 st.write(step)
-            # You could also add a map here using the Google Maps Embed API or a static map image if you want to visualize the route
-            # Note: Displaying interactive Google Maps routes typically requires more complex JavaScript/HTML embedding
         else:
             st.info("No detailed directions found.")
 
-st.markdown("---")
-st.write("Powered by weather.gov and Google Maps Directions API")
+elif get_news_button and news_query:
+    st.header("📰 Latest News")
+    with st.spinner(f"Fetching news for '{news_query}'..."):
+        articles = fetch_news(news_query, num_articles=10) # Fetch top 10 articles
+        display_news(articles)
+    st.markdown("---")
+    st.write("Powered by NewsAPI.org")
 
+else:
+    # Initial message when no button has been pressed yet
+    st.info("Use the sidebar to fetch Weather, Traffic, or News information.")
+
+st.markdown("---")
+st.write("Powered by weather.gov, Google Maps Directions API, and NewsAPI.org")
