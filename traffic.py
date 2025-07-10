@@ -210,7 +210,7 @@ if get_weather_button and selected_weather_city:
                     current_period = forecast_periods[0]
                     st.metric(label="Temperature", value=f"{current_period.get('temperature')}°{current_period.get('temperatureUnit', 'F')}", delta=None)
                     st.write(f"**Short Forecast:** {current_period.get('shortForecast')}")
-                    winds peed =
+                    windspeed =
 current_period.get('windSpeed')
                     wind_direction = current_period.get('windDirection')
                     if wind_speed:
