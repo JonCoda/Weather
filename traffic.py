@@ -134,7 +134,7 @@ def get_driving_directions(origin, destination):
 
 # --- News API Functions ---
 def fetch_news(query='general', num_articles=5): # Default to 'general' query and 5 articles for brevity
-    if not NEWS_API_KEY or NEWS_API_KEY == '9f37170722f04a1abb96957252b093d1':
+    if NEWS_API_KEY == '9f37170722f04a1abb96957252b093d1':
         st.error("News API Key is not configured or is using a placeholder key. News functionality may be limited or fail.")
         return [] # Return empty list if key is missing or placeholder
 
