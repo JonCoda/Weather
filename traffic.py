@@ -270,13 +270,6 @@ if get_weather_button and weather_city:
                         st.markdown("---")
                         st.markdown("#### Raw Hourly Forecast Data Table")
                         st.dataframe(hourly_df[['Temperature (°F)', 'Wind Speed (mph)', 'Short Forecast']])
-
-                    st.markdown("---")
-                    st.markdown("#### City Location Map")
-                    m = folium.Map(location=[lat, lon], zoom_start=10)
-                    folium.Marker([lat, lon], popup=display_name).add_to(m)
-                    st_folium(m, width=700, height=500, key="weather_map") # Added unique key
-
                 else:
                     st.warning("Could not retrieve detailed forecast data for the specified location.")
             else:
